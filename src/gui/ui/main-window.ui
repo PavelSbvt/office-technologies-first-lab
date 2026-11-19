@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>window</class>
+ <widget class="QWidget" name="window">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>720</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>720</width>
+    <height>480</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Программа обработки лог-файла</string>
+  </property>
+  <property name="windowFilePath">
+   <string>QWidget#window {\n    background-color: #1E1F22;\n    border-radius: 10px;\n}</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QWidget" name="widget" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="label_log_file">
+        <property name="text">
+         <string>Файл лога</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="line_for_path">
+        <property name="styleSheet">
+         <string notr="true">QLineEdit#line_for_path {
+    background-color: #3C3F41;
+    color: #D4E0E4;
+    border: 2px solid #4D4E51;
+    border-radius: 8px;
+    padding: 5px 10px;
+}
+
+QLineEdit#line_for_path:focus {
+    border: 2px solid #CED0D6;
+    background-color: #3C3F41;
+}
+
+QLineEdit#line_for_path::placeholder {
+    color: #6272a4;
+}</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="button_rewiev">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton#button_rewiev {
+    background-color: #3574F0;
+    color: #D4E0E4;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    padding: 0px 10px;
+}
+
+QPushButton#button_rewievr:hover {
+    background-color: #2866e0;
+}
+
+QPushButton#button_rewiev:pressed {
+    background-color: #2557ba;
+}</string>
+        </property>
+        <property name="text">
+         <string>Найти файл</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_2" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QPushButton" name="button_save_graphics_to_png">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>200</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton#button_save_graphics_to_png {
+background-color: #3574F0;
+color: #D4E0E4;
+border: none;
+border-radius: 10px;
+font-weight: bold;
+padding: 0px 10px;
+}
+QPushButton#button_save_graphics_to_png:hover {
+background-color: #2866e0;
+}
+QPushButton#button_save_graphics_to_png:pressed { background-color: #2557ba;
+}</string>
+        </property>
+        <property name="text">
+         <string>Сохранить графики в png</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="run_button">
+        <property name="minimumSize">
+         <size>
+          <width>30</width>
+          <height>31</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>30</width>
+          <height>31</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_3" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QListWidget" name="list_widget_for_show_graphics"/>
+      </item>
+      <item>
+       <widget class="QTextEdit" name="log_widget"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_for_log">
+     <property name="text">
+      <string>файл не обработан</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
