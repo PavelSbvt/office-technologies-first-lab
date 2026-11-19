@@ -22,7 +22,7 @@ except Exception:
 from matplotlib.figure import Figure
 
 from src.core.processor import group_by_interval
-from src.core.utils import format_time
+from utils.utils import format_time
 
 
 def add_interpretation(fig, ax, text):
@@ -45,7 +45,7 @@ def plot_speed_over_time(fig, ax, records):
     ax.plot(times, avg_speeds, color="tab:red", linewidth=1.5,
             linestyle="--", label="Средняя с начала проверки")
 
-    ax.set_title("Скорость чтения/записи Kingston SD 32GB от времени")
+    ax.set_title("Скорость чтения/записи от времени")
     ax.set_xlabel("Время с начала проверки, мин")
     ax.set_ylabel("Скорость, МБ/с")
     ax.grid(True, linestyle=":", alpha=0.6)

@@ -10,7 +10,7 @@
 - группировка по интервалам времени и агрегация (средняя скорость).
 """
 
-from src.core.utils import bytes_to_mb
+from utils.utils import bytes_to_mb
 
 # Размер блока в badblocks по умолчанию - 1024 байта.
 BLOCK_SIZE = 1024

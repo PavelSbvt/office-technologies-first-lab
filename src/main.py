@@ -14,6 +14,10 @@
 import os
 import sys
 
+from PyQt6.QtWidgets import QApplication
+
+from gui.main_window import MainWindow
+
 
 def get_default_path():
     """Возвращает путь к демонстрационному файлу данных."""
@@ -25,7 +29,7 @@ def run_console(path):
     """Обрабатывает файл без графического окна и сохраняет графики."""
     from src.core.processor import process
     from src.core.charts import build_all_figures, save_all_figures
-    from src.core.utils import format_time
+    from utils.utils import format_time
 
     print("Читаем файл: {}".format(path))
     records, summary = process(path)
@@ -80,4 +84,10 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    App = QApplication(sys.argv)
+
+    Win = MainWindow()
+    Win.show()
+
+    sys.exit(App.exec())
+    # sys.exit(main())
