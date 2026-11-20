@@ -1,25 +1,10 @@
-# -*- coding: utf-8 -*-
-"""Модуль чтения данных из лог-файла badblocks (core.reader).
-
-Формат строк в файле (badblocks выводит прогресс одной строкой,
-перезаписывая её символами возврата каретки \r):
-
-    Checking for bad blocks in read-write mode
-    From block 0 to 31330303
-    Testing with random pattern:   0.00% done, 0:01 elapsed. (0/0/0 errors)\r
-      0.02% done, 0:02 elapsed. (0/0/0 errors)\r ...
-
-Каждая запись прогресса содержит:
-- процент выполнения;
-- прошедшее время (мм:сс или ч:мм:сс);
-- счётчики ошибок (новые/предварительные/состояние) в виде (a/b/c errors).
-"""
-
 import re
 
+
 # Регулярное выражение для одной записи прогресса.
-# Время может быть в формате м:сс (например 0:13) или ч:мм:сс (1:02:05).
+# Время может быть в формате м:сс или ч:мм:сс
 PROGRESS_PATTERN = re.compile(
+    r"(Testing with random pattern:|Чтение и сравнение:)?\s*"
     r"(\d+\.\d+)%\s+done,\s+(\d+):(\d+):?(\d*)\s+elapsed\.\s*"
     r"\((\d+)/(\d+)/(\d+)\s+errors\)"
 )
@@ -28,7 +13,7 @@ PROGRESS_PATTERN = re.compile(
 def parse_elapsed(h1, h2, h3):
     """Разбирает время из групп регулярного выражения и возвращает секунды.
 
-    badblocks печатает прошедшее время так:
+    badblocks печатает прошедшее время:
     - пока меньше часа: "м:сс" (например 0:13);
     - когда больше часа: "ч:мм:сс" (например 1:05:09).
     Поэтому если третья группа пустая, формат был "м:сс", иначе "ч:мм:сс".
@@ -58,41 +43,46 @@ def get_total_blocks(text):
 
 
 def load_raw_lines(path):
-    """Читает файл и возвращает список записей прогресса (словарей).
-
-    Так как badblocks пишет прогресс в одну строку с символами \\r,
-    файл читается целиком, затем разбивается по \\r и \\n.
-    Из получившихся фрагментов отбираются только те, что похожи на
-    запись прогресса - это отсекает мусор и некорректные значения.
-    """
     result = []
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
         text = f.read()
 
-    fragments = text.replace("\r", "\n").split("\n")
+    text = text.replace("\b", "\n").replace("\r", "\n")
+    fragments = text.split("\n")
     total_blocks = get_total_blocks(text)
+
+    phase_offset = 0.0
+    current_phase_name = None
 
     for fragment in fragments:
         match = PROGRESS_PATTERN.search(fragment)
         if match is None:
-            continue  # фрагмент не является записью прогресса - пропускаем
+            continue
 
-        percent = float(match.group(1))
-        elapsed = parse_elapsed(match.group(2),
-                                match.group(3),
-                                match.group(4))
-        errors_new = int(match.group(5))
-        errors_pre = int(match.group(6))
-        errors_state = int(match.group(7))
+        phase_name = match.group(1)
+        if phase_name:
+            current_phase_name = phase_name.strip()
+
+        if current_phase_name and "Чтение и сравнение" in current_phase_name:
+            if phase_offset == 0.0:
+                phase_offset = 100.0
+
+        if "Testing with pattern" in fragment and "random" not in fragment:
+            break
+
+        percent = float(match.group(2))
+        elapsed = parse_elapsed(match.group(3), match.group(4), match.group(5))
+
+        # Определяем фазу: 1 = запись, 2 = чтение
+        current_phase = 2 if phase_offset > 0 else 1
 
         record = {
-            "percent": percent,                       # % выполнено
-            "elapsed": elapsed,                       # время, сек
-            "errors_new": errors_new,                 # новые ошибки
-            "errors_pre": errors_pre,                 # предварительные ошибки
-            "errors_state": errors_state,             # ошибки состояния
-            "block_end": int(total_blocks * percent / 100.0),  # номер блока
+            "percent": percent,  # процент этапа (0-100)
+            "elapsed": elapsed,  # общее время
+            "phase": current_phase,  # 1 или 2
+            "errors_new": int(match.group(6)),
+            "errors_pre": int(match.group(7)),
+            "errors_state": int(match.group(8)),
         }
         result.append(record)
-
     return result

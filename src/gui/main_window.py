@@ -96,24 +96,31 @@ class MainWindow(QWidget):
             return
 
         try:
-            records, summary = process(path)
+            # Распаковываем данные для двух этапов
+            (write_smoothed, write_summary), (read_smoothed, read_summary) = process(path)
         except Exception as exc:
             QMessageBox.critical(
                 self, "Ошибка",
                 "Не удалось обработать файл:\n{}".format(exc))
             return
 
-        if len(records) < 3:
+        # Проверяем, что данных достаточно хотя бы на одном из этапов
+        total_records = len(write_smoothed) + len(read_smoothed)
+        if total_records < 3:
             QMessageBox.warning(
                 self, "Мало данных",
                 "В файле найдено меньше трёх корректных записей прогресса.")
             return
 
-        self.records = records
-        self.summary = summary
+        # Сохраняем данные и сводки в атрибуты класса
+        self.write_records = write_smoothed
+        self.read_records = read_smoothed
+        self.write_summary = write_summary
+        self.read_summary = read_summary
 
         try:
-            self.figures = build_all_figures(records)
+            # Передаем ДВА списка в функцию построения
+            self.figures = build_all_figures(write_smoothed, read_smoothed)
         except Exception as exc:
             self.figures = []
             QMessageBox.critical(
@@ -124,34 +131,76 @@ class MainWindow(QWidget):
         for name, _fig in self.figures:
             self.ui.list_widget_for_show_graphics.addItem(name)
 
+        # Вызываем показ сводки (она возьмет данные из self.write_summary и self.read_summary)
         self.show_summary()
+
+        # Формируем текст статуса (время и ошибки - общие из второй фазы,
+        # так как время там накопленное, а ошибки суммарные)
+        total_time = read_summary["total_time"] if read_summary else write_summary["total_time"]
+        total_errors = write_summary["errors"] + read_summary["errors"] if read_summary else write_summary["errors"]
+
         self.ui.label_for_log.setText(
-            "Загружено записей: {}. Время проверки: {}. Ошибок: {}.".format(
-                summary["count"],
-                format_time(summary["total_time"]),
-                summary["errors"]))
+            "Загружено записей: {} (Запись: {}, Чтение: {}). Время: {}. Ошибок: {}.".format(
+                total_records,
+                len(write_smoothed),
+                len(read_smoothed),
+                format_time(total_time),
+                total_errors))
 
     def show_summary(self):
         """Показывает сводку по данным в текстовом поле."""
-        s = self.summary
+        w = getattr(self, "write_summary", {})
+        r = getattr(self, "read_summary", {})
+
+        if not w and not r:
+            self.ui.log_widget.setPlainText("Нет данных для отображения.")
+            return
+
+        # Безопасно извлекаем значения с дефолтами, чтобы не упасть, если одно из полей пустое
+        w_count = w.get("count", 0)
+        r_count = r.get("count", 0)
+        w_avg = w.get("avg_speed", 0.0)
+        r_avg = r.get("avg_speed", 0.0)
+        w_min = w.get("min_speed", 0.0)
+        r_min = r.get("min_speed", 0.0)
+        w_max = w.get("max_speed", 0.0)
+        r_max = r.get("max_speed", 0.0)
+        w_err = w.get("errors", 0)
+        r_err = r.get("errors", 0)
+
+        # Для времени берем максимум из двух (так как проверка идет последовательно)
+        total_time = max(w.get("total_time", 0), r.get("total_time", 0))
+        total_count = w_count + r_count
+        total_errors = w_err + r_err
+
         text = (
             "Сводка по файлу\n"
-            "================\n"
-            "Корректных записей: {count}\n"
-            "Полное время проверки: {time} ({total_time} сек)\n"
-            "Средняя скорость: {avg:.2f} МБ/с\n"
-            "Минимальная скорость: {min:.2f} МБ/с\n"
-            "Максимальная скорость: {max:.2f} МБ/с\n"
-            "Найдено ошибок: {errors}\n\n"
-            "Двойной клик по названию графика слева - открыть окно с "
-            "графиком.\n".format(
-                count=s["count"],
-                time=format_time(s["total_time"]),
-                total_time=s["total_time"],
-                avg=s["avg_speed"],
-                min=s["min_speed"],
-                max=s["max_speed"],
-                errors=s["errors"]))
+            "\n"
+            "Корректных записей: {total_count} (Запись: {w_count}, Чтение: {r_count})\n"
+            "Полное время проверки: {time} ({total_time} сек)\n\n"
+            "ЭТАП ЗАПИСИ\n"
+            "Средняя скорость: {w_avg:.2f} МБ/с\n"
+            "Минимальная скорость: {w_min:.2f} МБ/с\n"
+            "Максимальная скорость: {w_max:.2f} МБ/с\n\n"
+            "ЭТАП ЧТЕНИЯ\n"
+            "Средняя скорость: {r_avg:.2f} МБ/с\n"
+            "Минимальная скорость: {r_min:.2f} МБ/с\n"
+            "Максимальная скорость: {r_max:.2f} МБ/с\n\n"
+            "Найдено ошибок: {total_errors}\n\n"
+            "Двойной клик по названию графика слева - открыть окно с графиком.\n".format(
+                total_count=total_count,
+                w_count=w_count,
+                r_count=r_count,
+                time=format_time(total_time),
+                total_time=total_time,
+                w_avg=w_avg,
+                w_min=w_min,
+                w_max=w_max,
+                r_avg=r_avg,
+                r_min=r_min,
+                r_max=r_max,
+                total_errors=total_errors
+            ))
         self.ui.log_widget.setPlainText(text)
 
     def on_double_click(self, item):
